@@ -29,6 +29,7 @@ namespace Reader
         private void Form1_Load(object sender, EventArgs e)
         {
             curentFont = new Font(richTextBox1.Font.FontFamily, 12, FontStyle.Regular);
+            richTextBox1.Font = curentFont;
         }
 
         private void button_file_select(object sender, EventArgs e)
@@ -231,9 +232,21 @@ namespace Reader
         }
         private int GetPagesCount(string filePath)
         {
-            int charSizeInBytes, pageSizeInBytes;
-            GetBytesPerPage(richTextBox1, out charSizeInBytes, out pageSizeInBytes);
-            return (int)(GetFileLenght(filePath) / pageSizeInBytes)+1;
+            try
+            {
+                int charSizeInBytes, pageSizeInBytes;
+                GetBytesPerPage(richTextBox1, out charSizeInBytes, out pageSizeInBytes);
+                return (int)(GetFileLenght(filePath) / pageSizeInBytes) + 1;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Максимальный размер шрифта.", "Что-то пошло не так", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                int charSizeInBytes, pageSizeInBytes;
+                GetBytesPerPage(richTextBox1, out charSizeInBytes, out pageSizeInBytes);
+                curentFont = new Font(richTextBox1.Font.FontFamily, curentFont.Size-1, FontStyle.Regular);
+                richTextBox1.Font = curentFont;
+                return (int)(GetFileLenght(filePath) / (pageSizeInBytes+1)) + 1;
+            }
 
         }
 
