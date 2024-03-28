@@ -16,10 +16,11 @@ namespace Reader
     {
         List<String> files = new List<String>();
         int page = 1;
-        string currentFile="";
-        int pageCount=0;
+        string currentFile = "";
+        int pageCount = 0;
         int w = 0;
         Font curentFont;
+
         public Form1()
         {
             InitializeComponent();
@@ -29,7 +30,6 @@ namespace Reader
         private void Form1_Load(object sender, EventArgs e)
         {
             curentFont = new Font(richTextBox1.Font.FontFamily, 12, FontStyle.Regular);
-            richTextBox1.Font = curentFont;
         }
 
         private void button_file_select(object sender, EventArgs e)
@@ -38,10 +38,12 @@ namespace Reader
             string filePath = btn.Name;
             currentFile = filePath;
             pageCount = GetPagesCount(currentFile);
-            if(page>pageCount)
+            if (page > pageCount)
             {
-                page= pageCount;
+                page = pageCount;
+                textBox1.Text = page.ToString();
             }
+
             richTextBox1.Text = GetTextFromPage(currentFile, page);
             label2.Text = "/";
             label2.Text += pageCount.ToString();
@@ -60,17 +62,18 @@ namespace Reader
                 btn.Click += new EventHandler(this.button_file_select);
                 panel1.Controls.Add(btn);
                 files.Add(filePath);
-            };
+            }
+
+            ;
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            
             try
             {
                 var openFileDialog = new OpenFileDialog();
                 openFileDialog.Filter = "TXT files (*.txt)|*.txt|All files (*.*)|*.*";
-               
+
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     string filePath = openFileDialog.FileName;
@@ -87,10 +90,14 @@ namespace Reader
                 MessageBox.Show(ex.Message, "Что-то пошло не так", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            pageCount= GetPagesCount(currentFile);
+
+            pageCount = GetPagesCount(currentFile);
+            page = 1;
+            textBox1.Text = page.ToString();
+
             richTextBox1.Text = GetTextFromPage(currentFile, page);
             label2.Text = "/";
-            label2.Text+=pageCount.ToString();
+            label2.Text += pageCount.ToString();
             textBox1.ReadOnly = false;
         }
 
@@ -101,14 +108,14 @@ namespace Reader
             {
                 return;
             }
-            else {
+            else
+            {
                 if (curentFont.Size - 1 < 1)
                 {
                     return;
                 }
                 else
                 {
-
                     curentFont = new Font(richTextBox1.Font.FontFamily, curentFont.Size - 1, FontStyle.Regular);
                     richTextBox1.Font = curentFont;
                 }
@@ -117,20 +124,22 @@ namespace Reader
 
         private void button3_Click(object sender, EventArgs e)
         {
-            if(currentFile=="")
+            if (currentFile == "")
             {
                 return;
             }
+
             {
                 try
                 {
                     curentFont = new Font(richTextBox1.Font.FontFamily, curentFont.Size + 1, FontStyle.Regular);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message, "Что-то пошло не так", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
+
                 richTextBox1.Font = curentFont;
             }
         }
@@ -155,18 +164,19 @@ namespace Reader
             }
 
             richTextBox1.Text = GetTextFromPage(currentFile, ++page);
-            textBox1.Text=page.ToString();
+            textBox1.Text = page.ToString();
         }
 
 
         private void richTextBox1_FontChanged(object sender, EventArgs e)
         {
             pageCount = GetPagesCount(currentFile);
-            if(page>pageCount)
+            if (page > pageCount)
             {
-                page=pageCount;
+                page = pageCount;
                 textBox1.Text = page.ToString();
             }
+
             richTextBox1.Text = GetTextFromPage(currentFile, page);
 
             label2.Text = '/' + pageCount.ToString();
@@ -178,7 +188,7 @@ namespace Reader
             using (Graphics g = richTextBox.CreateGraphics())
             {
                 float charSize = richTextBox.Font.Size;
-                int charsPerLine = (int)(richTextBox.Width / (charSize/1.33));
+                int charsPerLine = (int)(richTextBox.Width / (charSize / 1.33));
                 return charsPerLine;
             }
         }
@@ -188,8 +198,8 @@ namespace Reader
             System.IO.FileInfo file = new System.IO.FileInfo(filePath);
             long size = file.Length;
             return size;
-
         }
+
         private string GetTextFromPage(string filePath, int targetPageNumber)
         {
             try
@@ -199,12 +209,12 @@ namespace Reader
                 int charSizeInBytes, pageSizeInBytes;
                 GetBytesPerPage(richTextBox1, out charSizeInBytes, out pageSizeInBytes);
 
-                int offset =(int)( (targetPageNumber-1) * pageSizeInBytes);
+                int offset = (int)((targetPageNumber - 1) * pageSizeInBytes);
 
                 sr.BaseStream.Seek(offset, SeekOrigin.Begin);
 
 
-                char[] buffer = new char[pageSizeInBytes/2];
+                char[] buffer = new char[pageSizeInBytes / 2];
 
                 int bytesRead = sr.ReadBlock(buffer, 0, buffer.Length);
 
@@ -215,10 +225,8 @@ namespace Reader
             }
             catch (Exception ex)
             {
-
                 MessageBox.Show(ex.Message, "Что-то пошло не так", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return "";
-
             }
         }
 
@@ -230,6 +238,7 @@ namespace Reader
             charSizeInBytes = Encoding.UTF8.GetByteCount("а");
             pageSizeInBytes = charsPerLine * linesPerPage * charSizeInBytes;
         }
+
         private int GetPagesCount(string filePath)
         {
             try
@@ -240,14 +249,14 @@ namespace Reader
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Максимальный размер шрифта.", "Что-то пошло не так", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Максимальный размер шрифта.", "Что-то пошло не так", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
                 int charSizeInBytes, pageSizeInBytes;
                 GetBytesPerPage(richTextBox1, out charSizeInBytes, out pageSizeInBytes);
-                curentFont = new Font(richTextBox1.Font.FontFamily, curentFont.Size-1, FontStyle.Regular);
+                curentFont = new Font(richTextBox1.Font.FontFamily, curentFont.Size - 1, FontStyle.Regular);
                 richTextBox1.Font = curentFont;
-                return (int)(GetFileLenght(filePath) / (pageSizeInBytes+1)) + 1;
+                return (int)(GetFileLenght(filePath) / (pageSizeInBytes + 1)) + 1;
             }
-
         }
 
         private int CalculateLinesPerPage(RichTextBox richTextBox)
@@ -261,17 +270,15 @@ namespace Reader
         }
 
 
-       
-
         private void Form1_SizeChanged(object sender, EventArgs e)
         {
             UpdateButtonSizeAndPosition();
-            if (richTextBox1.Text!="")
+            if (richTextBox1.Text != "")
             {
                 pageCount = GetPagesCount(currentFile);
                 richTextBox1.Text = GetTextFromPage(currentFile, page);
 
-                label2.Text ='/'+ pageCount.ToString();
+                label2.Text = '/' + pageCount.ToString();
             }
             else
             {
@@ -281,10 +288,10 @@ namespace Reader
 
         private void UpdateButtonSizeAndPosition()
         {
-            int buttonWidth = ClientSize.Width / 10; 
-            int buttonHeight = 25; 
-            int margin = 5; 
-            
+            int buttonWidth = ClientSize.Width / 10;
+            int buttonHeight = 25;
+            int margin = 5;
+
             button1.Size = new Size(buttonWidth, buttonHeight);
             button1.Location = new Point(0, 0);
 
@@ -301,47 +308,46 @@ namespace Reader
             label2.Location = new Point(textBox1.Right + 2, 4);
 
             button5.Size = new Size(buttonWidth, buttonHeight);
-            button5.Location = new Point(label2.Right + margin+20, 0);
+            button5.Location = new Point(label2.Right + margin + 20, 0);
 
             richTextBox1.Location = new Point(0, button1.Bottom + margin);
             richTextBox1.Size = new Size(ClientSize.Width, ClientSize.Height - richTextBox1.Top);
         }
-        
+
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
-            if(textBox1.Text.Length==0) {
+            if (textBox1.Text.Length == 0)
+            {
                 return;
-
             }
-            
+
             try
             {
-                Int32.TryParse(textBox1.Text,out page);
-                if(page>pageCount)
+                Int32.TryParse(textBox1.Text, out page);
+                if (page > pageCount)
                 {
-                    page= pageCount;
+                    page = pageCount;
                     textBox1.Text = pageCount.ToString();
                     throw new Exception("Нет такой страницы");
                 }
+
                 richTextBox1.Text = GetTextFromPage(currentFile, page);
             }
             catch (Exception ex)
             {
                 textBox1.Text = page.ToString();
-                MessageBox.Show(ex.Message,"Ошибка" , MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
         }
 
         private void splitContainer2_Panel2_Paint(object sender, PaintEventArgs e)
         {
-
         }
 
         private void label2_Click(object sender, EventArgs e)
         {
-
         }
     }
 }
