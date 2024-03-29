@@ -245,6 +245,16 @@ namespace Reader
             {
                 int charSizeInBytes, pageSizeInBytes;
                 GetBytesPerPage(richTextBox1, out charSizeInBytes, out pageSizeInBytes);
+                int pages=(int)(GetFileLenght(filePath)/pageSizeInBytes)+1;
+                if(Int64.TryParse(pages,out pages_res))
+                {
+                    return pages_res;
+                }
+                else
+                {
+                    MessageBox.Show("Слишком большой файл","Ошибка",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                    return 0;
+                }
                 return (int)(GetFileLenght(filePath) / pageSizeInBytes) + 1;
             }
             catch (Exception ex)
@@ -324,7 +334,8 @@ namespace Reader
 
             try
             {
-                Int32.TryParse(textBox1.Text, out page);
+               if(Int32.TryParse(textBox1.Text, out page))
+               {
                 if (page > pageCount)
                 {
                     page = pageCount;
@@ -333,11 +344,13 @@ namespace Reader
                 }
 
                 richTextBox1.Text = GetTextFromPage(currentFile, page);
+               }
+               else throw new Exception ("Нет такой страницы");
             }
             catch (Exception ex)
             {
-                textBox1.Text = page.ToString();
-                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                textBox1.Text = "";
+                MessageBox.Show("Введите корректный номер страницы", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
         }
