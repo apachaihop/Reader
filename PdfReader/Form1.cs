@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Web.UI;
 using System.Windows.Forms;
 using Font = System.Drawing.Font;
 using FontStyle = System.Drawing.FontStyle;
@@ -34,26 +31,33 @@ namespace Reader
 
         private void button_file_select(object sender, EventArgs e)
         {
-            System.Windows.Forms.Button btn = sender as System.Windows.Forms.Button;
-            string filePath = btn.Name;
-            currentFile = filePath;
-            pageCount = GetPagesCount(currentFile);
-            if (page > pageCount)
+            try
             {
-                page = pageCount;
-                textBox1.Text = page.ToString();
-            }
+                Button btn = sender as Button;
+                string filePath = btn.Name;
+                currentFile = filePath;
+                pageCount = GetPagesCount(currentFile);
+                if (page > pageCount)
+                {
+                    page = pageCount;
+                    textBox1.Text = page.ToString();
+                }
 
-            richTextBox1.Text = GetTextFromPage(currentFile, page);
-            label2.Text = "/";
-            label2.Text += pageCount.ToString();
+                richTextBox1.Text = GetTextFromPage(currentFile, page);
+                label2.Text = "/";
+                label2.Text += pageCount.ToString();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void addFile(String fileName, String filePath)
         {
             if (!files.Contains(filePath))
             {
-                System.Windows.Forms.Button btn = new System.Windows.Forms.Button();
+                Button btn = new Button();
                 btn.Top = 15 + w;
                 w += 25;
                 btn.Left = 10;
@@ -195,7 +199,7 @@ namespace Reader
 
         private long GetFileLenght(string filePath)
         {
-            System.IO.FileInfo file = new System.IO.FileInfo(filePath);
+            FileInfo file = new FileInfo(filePath);
             long size = file.Length;
             return size;
         }
@@ -243,12 +247,12 @@ namespace Reader
         {
             try
             {
-                int charSizeInBytes, pageSizeInBytes;
-                GetBytesPerPage(richTextBox1, out charSizeInBytes, out pageSizeInBytes);
+                int pageSizeInBytes;
+                GetBytesPerPage(richTextBox1, out _, out pageSizeInBytes);
                 int pages=(int)(GetFileLenght(filePath)/pageSizeInBytes)+1;
-                if(Int64.TryParse(pages,out pages_res))
+                if(Int32.TryParse(pages.ToString(),out var pages_res))
                 {
-                    return pages_res;
+                    return (int)pages_res;
                 }
                 else
                 {
@@ -261,8 +265,8 @@ namespace Reader
             {
                 MessageBox.Show("Максимальный размер шрифта.", "Что-то пошло не так", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
-                int charSizeInBytes, pageSizeInBytes;
-                GetBytesPerPage(richTextBox1, out charSizeInBytes, out pageSizeInBytes);
+                int pageSizeInBytes;
+                GetBytesPerPage(richTextBox1, out _, out pageSizeInBytes);
                 curentFont = new Font(richTextBox1.Font.FontFamily, curentFont.Size - 1, FontStyle.Regular);
                 richTextBox1.Font = curentFont;
                 return (int)(GetFileLenght(filePath) / (pageSizeInBytes + 1)) + 1;
