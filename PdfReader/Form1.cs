@@ -1,9 +1,10 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using Newtonsoft.Json;
 using Font = System.Drawing.Font;
 using FontStyle = System.Drawing.FontStyle;
 
@@ -17,11 +18,37 @@ namespace Reader
         int pageCount = 0;
         int w = 0;
         Font curentFont;
+        private List<Classification> classifications = new List<Classification>();
+        private HashSet<int> history = new HashSet<int>();
 
         public Form1()
         {
             InitializeComponent();
             UpdateButtonSizeAndPosition();
+            try
+            {
+                Directory.CreateDirectory(@"D:\SSP\Reader4\PdfReader\classifications");
+                string[] allfiles = Directory.GetFiles(@"D:\SSP\Reader4\PdfReader\classifications", "*.json");
+
+                dataGridView1.Columns.Add("Name", "Name");
+                dataGridView1.Columns.Add("Weight", "Weight");
+
+                foreach (string file in allfiles)
+                {
+                    string json = File.ReadAllText(file);
+                    if (json == null)
+                    {
+                        continue;
+                    }
+
+                    Classification item = JsonConvert.DeserializeObject<Classification>(json);
+                    classifications.Add(item);
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show("Проблема с открытием файлов классификаций", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -33,6 +60,13 @@ namespace Reader
         {
             try
             {
+                dataGridView1.Rows.Clear();
+                dataGridView1.Refresh();
+                history.Clear();
+                foreach (var item in classifications)
+                {
+                    item.currentWeight = 0;
+                }
                 Button btn = sender as Button;
                 string filePath = btn.Name;
                 currentFile = filePath;
@@ -75,6 +109,7 @@ namespace Reader
         {
             try
             {
+                
                 var openFileDialog = new OpenFileDialog();
                 openFileDialog.Filter = "TXT files (*.txt)|*.txt|All files (*.*)|*.*";
 
@@ -94,7 +129,13 @@ namespace Reader
                 MessageBox.Show(ex.Message, "Что-то пошло не так", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-
+            dataGridView1.Rows.Clear();
+            dataGridView1.Refresh();
+            history.Clear();
+            foreach (var item in classifications)
+            {
+                item.currentWeight = 0;
+            }
             pageCount = GetPagesCount(currentFile);
             page = 1;
             textBox1.Text = page.ToString();
@@ -108,6 +149,7 @@ namespace Reader
 
         private void button2_Click(object sender, EventArgs e)
         {
+        
             if (currentFile == "")
             {
                 return;
@@ -128,6 +170,7 @@ namespace Reader
 
         private void button3_Click(object sender, EventArgs e)
         {
+          
             if (currentFile == "")
             {
                 return;
@@ -137,6 +180,7 @@ namespace Reader
                 try
                 {
                     curentFont = new Font(richTextBox1.Font.FontFamily, curentFont.Size + 1, FontStyle.Regular);
+                    richTextBox1.Font = curentFont;
                 }
                 catch (Exception ex)
                 {
@@ -150,6 +194,7 @@ namespace Reader
 
         private void button4_Click(object sender, EventArgs e)
         {
+            
             if (page < 2)
             {
                 return;
@@ -174,6 +219,13 @@ namespace Reader
 
         private void richTextBox1_FontChanged(object sender, EventArgs e)
         {
+            dataGridView1.Rows.Clear();
+            dataGridView1.Refresh();
+            history.Clear();
+            foreach (var item in classifications)
+            {
+                item.currentWeight = 0;
+            }
             pageCount = GetPagesCount(currentFile);
             if (page > pageCount)
             {
@@ -225,6 +277,50 @@ namespace Reader
                 StringBuilder pageText = new StringBuilder();
 
                 pageText.Append(buffer, 0, bytesRead);
+                if(!history.Contains(targetPageNumber)){
+                    foreach (var item in classifications)
+                    {
+                        int commonWeight = 0;
+                        foreach (var elem in item.words)
+                        {
+                            var indices = new List<int>();
+
+                            int index = pageText.ToString().IndexOf(elem.name, 0);
+                            while (index > -1)
+                            {
+                                indices.Add(index);
+                                index = pageText.ToString().IndexOf(elem.name, index + elem.name.Length);
+                            }
+
+                            commonWeight += elem.weight * indices.Count;
+                        }
+
+                        item.currentWeight += commonWeight;
+                        DataGridViewRow currentRow = null;
+                        foreach (DataGridViewRow row in dataGridView1.Rows)
+                        {
+                            if (row.Cells[0].Value != null && row.Cells[0].Value.ToString() == item.name)
+                            {
+                                currentRow = row;
+                            }
+                        }
+
+                        if (currentRow != null)
+                        {
+                            currentRow.Cells["weight"].Value = item.currentWeight;
+                        }
+                        else
+                        {
+                            //1. Создаём и добавляем колонки
+                            //2. Добавляем строку
+                            int rowNumber = dataGridView1.Rows.Add();
+                            //3. Заполняем ячейки
+                            dataGridView1.Rows[rowNumber].Cells["Name"].Value = item.name;
+                            dataGridView1.Rows[rowNumber].Cells["Weight"].Value = item.currentWeight;
+                        }
+                        history.Add(targetPageNumber);
+                    }
+                }
                 return pageText.ToString();
             }
             catch (Exception ex)
@@ -287,6 +383,13 @@ namespace Reader
         private void Form1_SizeChanged(object sender, EventArgs e)
         {
             UpdateButtonSizeAndPosition();
+            dataGridView1.Rows.Clear();
+            dataGridView1.Refresh();
+            history.Clear();
+            foreach (var item in classifications)
+            {
+                item.currentWeight = 0;
+            }
             if (richTextBox1.Text != "")
             {
                 pageCount = GetPagesCount(currentFile);
@@ -366,5 +469,7 @@ namespace Reader
         private void label2_Click(object sender, EventArgs e)
         {
         }
+
+      
     }
 }
